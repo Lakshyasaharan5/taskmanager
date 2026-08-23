@@ -1,6 +1,7 @@
 package com.eulerity.taskmanager.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -45,6 +46,11 @@ public class TaskService {
 		return taskRepository.findAll().stream()
 				.map(this::toResponseDto)
 				.toList();
+	}
+
+	public Optional<TaskResponseDto> getTaskById(Long id) {
+		return taskRepository.findById(id)
+				.map(this::toResponseDto);
 	}
 
 	private TaskResponseDto toResponseDto(Task task) {

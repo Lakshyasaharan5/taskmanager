@@ -47,8 +47,10 @@ public class TaskManagerController {
 	}
 
 	@GetMapping("/tasks/{id}")
-	public String getTask(@PathVariable String id) {
-		return "dummy task with id " + id;
+	public ResponseEntity<TaskResponseDto> getTask(@PathVariable Long id) {
+		return taskService.getTaskById(id)
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
 	@PutMapping("/tasks/{id}")
