@@ -1,21 +1,41 @@
 package com.eulerity.taskmanager.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.eulerity.taskmanager.dto.TaskRequestDto;
+import com.eulerity.taskmanager.entity.Task;
+import com.eulerity.taskmanager.service.TaskService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
 public class TaskManagerController {
 
+	private final TaskService taskService;
+
+	public TaskManagerController(TaskService taskService) {
+		this.taskService = taskService;
+	}
+
 	@PostMapping("/tasks")
-	public String createTask() {
-		System.out.println("Tasks as of now: dummy task list");
-		return "dummy task created";
+	public ResponseEntity<String> createTask(@Valid @RequestBody TaskRequestDto request) {
+		try {
+			Task created = taskService.createTask(request);
+			return ResponseEntity.status(HttpStatus.CREATED)
+					.body("Task created with id " + created.getId());
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
 
 	@GetMapping("/tasks")

@@ -32,13 +32,15 @@ public class Task {
 	@Column
 	private String description;
 
-	@Column(name = "due_date")
+	@Column(name = "due_date", nullable = false)
 	private LocalDate dueDate;
 
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private TaskPriority priority;
 
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private TaskStatus status;
 
 	@ManyToOne(fetch = FetchType.LAZY)
