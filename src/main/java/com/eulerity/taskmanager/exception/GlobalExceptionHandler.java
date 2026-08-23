@@ -24,6 +24,11 @@ public class GlobalExceptionHandler {
 		return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", e.getMessage(), Collections.emptyList());
 	}
 
+	@ExceptionHandler(ConflictException.class)
+	public ResponseEntity<ErrorResponseDto> handleConflict(ConflictException e) {
+		return build(HttpStatus.CONFLICT, "CONFLICT", e.getMessage(), Collections.emptyList());
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponseDto> handleValidation(MethodArgumentNotValidException e) {
 		List<FieldErrorDto> fields = e.getBindingResult().getFieldErrors().stream()

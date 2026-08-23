@@ -9,15 +9,20 @@ import com.eulerity.taskmanager.dto.response.ProjectResponseDto;
 import com.eulerity.taskmanager.dto.response.TaskSummaryDto;
 import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
+import com.eulerity.taskmanager.exception.ConflictException;
+import com.eulerity.taskmanager.exception.ResourceNotFoundException;
 import com.eulerity.taskmanager.repository.ProjectRepository;
+import com.eulerity.taskmanager.repository.TaskRepository;
 
 @Service
 public class ProjectService {
 
 	private final ProjectRepository projectRepository;
+	private final TaskRepository taskRepository;
 
-	public ProjectService(ProjectRepository projectRepository) {
+	public ProjectService(ProjectRepository projectRepository, TaskRepository taskRepository) {
 		this.projectRepository = projectRepository;
+		this.taskRepository = taskRepository;
 	}
 
 	public Project createProject(ProjectRequestDto request) {
@@ -25,6 +30,16 @@ public class ProjectService {
 		project.setName(request.getName());
 		project.setDescription(request.getDescription());
 		return projectRepository.save(project);
+	}
+
+	public void deleteProject(Long id) {
+		Project project = projectRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + id));
+		if (taskRepository.existsByProjectId(project.getId())) {
+			throw new ConflictException(
+					"Cannot delete project with associated tasks. Please disassociate the tasks first.");
+		}
+		projectRepository.delete(project);
 	}
 
 	public List<ProjectResponseDto> getAllProjects() {

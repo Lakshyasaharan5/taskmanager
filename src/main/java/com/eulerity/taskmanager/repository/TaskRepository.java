@@ -6,4 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import com.eulerity.taskmanager.entity.Task;
 
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
+
+	boolean existsByProjectId(Long projectId);
+
 }

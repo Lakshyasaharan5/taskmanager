@@ -92,6 +92,12 @@ public class TaskManagerController {
 		return ResponseEntity.ok(projectService.getAllProjects());
 	}
 
+	@DeleteMapping("/projects/{id}")
+	public ResponseEntity<String> deleteProject(@PathVariable Long id) {
+		projectService.deleteProject(id);
+		return ResponseEntity.ok("Project deleted with id " + id);
+	}
+
 	@GetMapping("/health")
 	public String health() {
 		return "running fine";
