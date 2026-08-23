@@ -1,5 +1,7 @@
 package com.eulerity.taskmanager.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.eulerity.taskmanager.dto.TaskRequestDto;
+import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.dto.response.TaskResponseDto;
 import com.eulerity.taskmanager.entity.Task;
 import com.eulerity.taskmanager.service.TaskService;
 
@@ -39,8 +42,8 @@ public class TaskManagerController {
 	}
 
 	@GetMapping("/tasks")
-	public String getTasks() {
-		return "dummy task list";
+	public ResponseEntity<List<TaskResponseDto>> getTasks() {
+		return ResponseEntity.ok(taskService.getAllTasks());
 	}
 
 	@GetMapping("/tasks/{id}")

@@ -1,30 +1,33 @@
-package com.eulerity.taskmanager.dto;
+package com.eulerity.taskmanager.dto.response;
 
 import java.time.LocalDate;
 
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+public class TaskResponseDto {
 
-public class TaskRequestDto {
+	private Long id;
 
-	@NotBlank(message = "Title is required")
 	private String title;
 
 	private String description;
 
-	@NotNull(message = "Due date is required")
 	private LocalDate dueDate;
 
-	@NotNull(message = "Priority is required")
 	private TaskPriority priority;
 
-	@NotNull(message = "Status is required")
 	private TaskStatus status;
 
-	private Long projectId;
+	private ProjectSummaryDto project;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public String getTitle() {
 		return title;
@@ -66,12 +69,12 @@ public class TaskRequestDto {
 		this.status = status;
 	}
 
-	public Long getProjectId() {
-		return projectId;
+	public ProjectSummaryDto getProject() {
+		return project;
 	}
 
-	public void setProjectId(Long projectId) {
-		this.projectId = projectId;
+	public void setProject(ProjectSummaryDto project) {
+		this.project = project;
 	}
 
 }

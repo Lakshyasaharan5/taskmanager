@@ -1,8 +1,12 @@
 package com.eulerity.taskmanager.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import com.eulerity.taskmanager.dto.TaskRequestDto;
+import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.dto.response.ProjectSummaryDto;
+import com.eulerity.taskmanager.dto.response.TaskResponseDto;
 import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
 import com.eulerity.taskmanager.repository.ProjectRepository;
@@ -35,6 +39,32 @@ public class TaskService {
 		}
 
 		return taskRepository.save(task);
+	}
+
+	public List<TaskResponseDto> getAllTasks() {
+		return taskRepository.findAll().stream()
+				.map(this::toResponseDto)
+				.toList();
+	}
+
+	private TaskResponseDto toResponseDto(Task task) {
+		TaskResponseDto dto = new TaskResponseDto();
+		dto.setId(task.getId());
+		dto.setTitle(task.getTitle());
+		dto.setDescription(task.getDescription());
+		dto.setDueDate(task.getDueDate());
+		dto.setPriority(task.getPriority());
+		dto.setStatus(task.getStatus());
+
+		Project project = task.getProject();
+		if (project != null) {
+			ProjectSummaryDto projectSummary = new ProjectSummaryDto();
+			projectSummary.setId(project.getId());
+			projectSummary.setName(project.getName());
+			dto.setProject(projectSummary);
+		}
+
+		return dto;
 	}
 
 }
