@@ -25,9 +25,9 @@ import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
+import com.eulerity.taskmanager.service.AiService;
 import com.eulerity.taskmanager.service.ProjectService;
 import com.eulerity.taskmanager.service.TaskService;
-import com.eulerity.taskmanager.service.TaskSuggestionService;
 
 import jakarta.validation.Valid;
 
@@ -37,13 +37,12 @@ public class TaskManagerController {
 
 	private final TaskService taskService;
 	private final ProjectService projectService;
-	private final TaskSuggestionService taskSuggestionService;
+	private final AiService aiService;
 
-	public TaskManagerController(TaskService taskService, ProjectService projectService,
-			TaskSuggestionService taskSuggestionService) {
+	public TaskManagerController(TaskService taskService, ProjectService projectService, AiService aiService) {
 		this.taskService = taskService;
 		this.projectService = projectService;
-		this.taskSuggestionService = taskSuggestionService;
+		this.aiService = aiService;
 	}
 
 	@PostMapping("/tasks")
@@ -87,7 +86,7 @@ public class TaskManagerController {
 
 	@PostMapping("/tasks/suggest")
 	public ResponseEntity<TaskRequestDto> suggestTask(@Valid @RequestBody TaskSuggestionRequestDto request) {
-		return ResponseEntity.ok(taskSuggestionService.suggestTask(request.getQuery()));
+		return ResponseEntity.ok(aiService.suggestTask(request.getQuery()));
 	}
 
 	@PostMapping("/projects")

@@ -10,6 +10,7 @@
     <rule>dueDate must be YYYY-MM-DD format and in the future, or null</rule>
     <rule>priority must be exactly LOW, MEDIUM, or HIGH</rule>
     <rule>title is required and must not be empty</rule>
+    <rule>description should add context or detail NOT already captured in the title. If nothing meaningful to add beyond the title, set to null</rule>
   </outputRules>
   <schema>
     {
