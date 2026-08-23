@@ -31,15 +31,37 @@ public class TaskService {
 		task.setDueDate(request.getDueDate());
 		task.setPriority(request.getPriority());
 		task.setStatus(request.getStatus());
-
-		if (request.getProjectId() != null) {
-			Project project = projectRepository.findById(request.getProjectId())
-					.orElseThrow(() -> new IllegalArgumentException(
-							"Project not found with id " + request.getProjectId()));
-			task.setProject(project);
-		}
+		task.setProject(resolveProject(request.getProjectId()));
 
 		return taskRepository.save(task);
+	}
+
+	public Optional<Task> updateTask(Long id, TaskRequestDto request) {
+		return taskRepository.findById(id).map(task -> {
+			task.setTitle(request.getTitle());
+			task.setDescription(request.getDescription());
+			task.setDueDate(request.getDueDate());
+			task.setPriority(request.getPriority());
+			task.setStatus(request.getStatus());
+			task.setProject(resolveProject(request.getProjectId()));
+			return taskRepository.save(task);
+		});
+	}
+
+	public boolean deleteTask(Long id) {
+		if (!taskRepository.existsById(id)) {
+			return false;
+		}
+		taskRepository.deleteById(id);
+		return true;
+	}
+
+	private Project resolveProject(Long projectId) {
+		if (projectId == null) {
+			return null;
+		}
+		return projectRepository.findById(projectId)
+				.orElseThrow(() -> new IllegalArgumentException("Project not found with id " + projectId));
 	}
 
 	public List<TaskResponseDto> getAllTasks() {

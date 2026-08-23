@@ -54,15 +54,22 @@ public class TaskManagerController {
 	}
 
 	@PutMapping("/tasks/{id}")
-	public String updateTask(@PathVariable String id) {
-		System.out.println("updating task with id " + id);
-		return "dummy task updated with id " + id;
+	public ResponseEntity<String> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequestDto request) {
+		try {
+			return taskService.updateTask(id, request)
+					.map(task -> ResponseEntity.ok("Task updated with id " + task.getId()))
+					.orElseGet(() -> ResponseEntity.notFound().build());
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
 
 	@DeleteMapping("/tasks/{id}")
-	public String deleteTask(@PathVariable String id) {
-		System.out.println("deleting task with id " + id);
-		return "dummy task deleted with id " + id;
+	public ResponseEntity<String> deleteTask(@PathVariable Long id) {
+		if (taskService.deleteTask(id)) {
+			return ResponseEntity.ok("Task deleted with id " + id);
+		}
+		return ResponseEntity.notFound().build();
 	}
 
 	@GetMapping("/health")
