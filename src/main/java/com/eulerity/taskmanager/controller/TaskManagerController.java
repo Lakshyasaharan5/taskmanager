@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eulerity.taskmanager.dto.request.ProjectRequestDto;
 import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.dto.request.TaskSuggestionRequestDto;
 import com.eulerity.taskmanager.dto.response.PagedResponseDto;
 import com.eulerity.taskmanager.dto.response.ProjectResponseDto;
 import com.eulerity.taskmanager.dto.response.TaskResponseDto;
@@ -26,6 +27,7 @@ import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
 import com.eulerity.taskmanager.service.ProjectService;
 import com.eulerity.taskmanager.service.TaskService;
+import com.eulerity.taskmanager.service.TaskSuggestionService;
 
 import jakarta.validation.Valid;
 
@@ -35,10 +37,13 @@ public class TaskManagerController {
 
 	private final TaskService taskService;
 	private final ProjectService projectService;
+	private final TaskSuggestionService taskSuggestionService;
 
-	public TaskManagerController(TaskService taskService, ProjectService projectService) {
+	public TaskManagerController(TaskService taskService, ProjectService projectService,
+			TaskSuggestionService taskSuggestionService) {
 		this.taskService = taskService;
 		this.projectService = projectService;
+		this.taskSuggestionService = taskSuggestionService;
 	}
 
 	@PostMapping("/tasks")
@@ -78,6 +83,11 @@ public class TaskManagerController {
 	public ResponseEntity<String> deleteTask(@PathVariable Long id) {
 		taskService.deleteTask(id);
 		return ResponseEntity.ok("Task deleted with id " + id);
+	}
+
+	@PostMapping("/tasks/suggest")
+	public ResponseEntity<TaskRequestDto> suggestTask(@Valid @RequestBody TaskSuggestionRequestDto request) {
+		return ResponseEntity.ok(taskSuggestionService.suggestTask(request.getQuery()));
 	}
 
 	@PostMapping("/projects")

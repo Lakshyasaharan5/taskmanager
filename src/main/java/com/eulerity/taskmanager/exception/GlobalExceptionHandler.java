@@ -29,6 +29,11 @@ public class GlobalExceptionHandler {
 		return build(HttpStatus.CONFLICT, "CONFLICT", e.getMessage(), Collections.emptyList());
 	}
 
+	@ExceptionHandler(AiSuggestionException.class)
+	public ResponseEntity<ErrorResponseDto> handleAiSuggestion(AiSuggestionException e) {
+		return build(HttpStatus.BAD_GATEWAY, "AI_SUGGESTION_FAILED", e.getMessage(), Collections.emptyList());
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponseDto> handleValidation(MethodArgumentNotValidException e) {
 		List<FieldErrorDto> fields = e.getBindingResult().getFieldErrors().stream()
