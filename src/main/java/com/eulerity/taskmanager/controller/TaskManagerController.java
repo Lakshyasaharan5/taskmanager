@@ -13,9 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eulerity.taskmanager.dto.request.ProjectRequestDto;
 import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.dto.response.ProjectResponseDto;
 import com.eulerity.taskmanager.dto.response.TaskResponseDto;
+import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
+import com.eulerity.taskmanager.service.ProjectService;
 import com.eulerity.taskmanager.service.TaskService;
 
 import jakarta.validation.Valid;
@@ -25,9 +29,11 @@ import jakarta.validation.Valid;
 public class TaskManagerController {
 
 	private final TaskService taskService;
+	private final ProjectService projectService;
 
-	public TaskManagerController(TaskService taskService) {
+	public TaskManagerController(TaskService taskService, ProjectService projectService) {
 		this.taskService = taskService;
+		this.projectService = projectService;
 	}
 
 	@PostMapping("/tasks")
@@ -70,6 +76,18 @@ public class TaskManagerController {
 			return ResponseEntity.ok("Task deleted with id " + id);
 		}
 		return ResponseEntity.notFound().build();
+	}
+
+	@PostMapping("/projects")
+	public ResponseEntity<String> createProject(@Valid @RequestBody ProjectRequestDto request) {
+		Project created = projectService.createProject(request);
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body("Project created with id " + created.getId());
+	}
+
+	@GetMapping("/projects")
+	public ResponseEntity<List<ProjectResponseDto>> getProjects() {
+		return ResponseEntity.ok(projectService.getAllProjects());
 	}
 
 	@GetMapping("/health")
