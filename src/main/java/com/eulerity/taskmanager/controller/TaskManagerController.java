@@ -1,5 +1,6 @@
 package com.eulerity.taskmanager.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -11,14 +12,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eulerity.taskmanager.dto.request.ProjectRequestDto;
 import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.dto.response.PagedResponseDto;
 import com.eulerity.taskmanager.dto.response.ProjectResponseDto;
 import com.eulerity.taskmanager.dto.response.TaskResponseDto;
 import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
+import com.eulerity.taskmanager.entity.enums.TaskPriority;
+import com.eulerity.taskmanager.entity.enums.TaskStatus;
 import com.eulerity.taskmanager.service.ProjectService;
 import com.eulerity.taskmanager.service.TaskService;
 
@@ -48,8 +53,22 @@ public class TaskManagerController {
 	}
 
 	@GetMapping("/tasks")
-	public ResponseEntity<List<TaskResponseDto>> getTasks() {
-		return ResponseEntity.ok(taskService.getAllTasks());
+	public ResponseEntity<Object> getTasks(
+			@RequestParam(required = false) TaskStatus status,
+			@RequestParam(required = false) TaskPriority priority,
+			@RequestParam(required = false) LocalDate dueBefore,
+			@RequestParam(required = false) LocalDate dueAfter,
+			@RequestParam(required = false) Long projectId,
+			@RequestParam(defaultValue = "dueDate") String sortBy,
+			@RequestParam(defaultValue = "asc") String sortDir,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "4") int size) {
+		try {
+			return ResponseEntity.ok(taskService.getFilteredTasks(
+					status, priority, dueBefore, dueAfter, projectId, sortBy, sortDir, page, size));
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
 
 	@GetMapping("/tasks/{id}")

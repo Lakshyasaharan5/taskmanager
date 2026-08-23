@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -16,12 +17,12 @@ public class TaskRequestDto {
 	private String description;
 
 	@NotNull(message = "Due date is required")
+	@FutureOrPresent(message = "Due date cannot be in the past")
 	private LocalDate dueDate;
 
 	@NotNull(message = "Priority is required")
 	private TaskPriority priority;
 
-	@NotNull(message = "Status is required")
 	private TaskStatus status;
 
 	private Long projectId;
