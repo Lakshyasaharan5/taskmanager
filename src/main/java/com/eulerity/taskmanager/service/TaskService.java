@@ -3,7 +3,6 @@ package com.eulerity.taskmanager.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +19,7 @@ import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
+import com.eulerity.taskmanager.exception.ResourceNotFoundException;
 import com.eulerity.taskmanager.repository.ProjectRepository;
 import com.eulerity.taskmanager.repository.TaskRepository;
 import com.eulerity.taskmanager.specification.TaskSpecification;
@@ -46,27 +46,26 @@ public class TaskService {
 		return taskRepository.save(task);
 	}
 
-	public Optional<Task> updateTask(Long id, TaskRequestDto request) {
-		return taskRepository.findById(id).map(task -> {
-			task.setTitle(request.getTitle());
-			task.setDescription(request.getDescription());
-			task.setDueDate(request.getDueDate());
-			task.setPriority(request.getPriority());
-			if (request.getStatus() == null) {
-				throw new IllegalArgumentException("status is required");
-			}
-			task.setStatus(request.getStatus());
-			task.setProject(resolveProject(request.getProjectId()));
-			return taskRepository.save(task);
-		});
+	public Task updateTask(Long id, TaskRequestDto request) {
+		Task task = taskRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Task not found with id " + id));
+		task.setTitle(request.getTitle());
+		task.setDescription(request.getDescription());
+		task.setDueDate(request.getDueDate());
+		task.setPriority(request.getPriority());
+		if (request.getStatus() == null) {
+			throw new IllegalArgumentException("status is required");
+		}
+		task.setStatus(request.getStatus());
+		task.setProject(resolveProject(request.getProjectId()));
+		return taskRepository.save(task);
 	}
 
-	public boolean deleteTask(Long id) {
+	public void deleteTask(Long id) {
 		if (!taskRepository.existsById(id)) {
-			return false;
+			throw new ResourceNotFoundException("Task not found with id " + id);
 		}
 		taskRepository.deleteById(id);
-		return true;
 	}
 
 	private Project resolveProject(Long projectId) {
@@ -74,12 +73,13 @@ public class TaskService {
 			return null;
 		}
 		return projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id " + projectId));
+				.orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + projectId));
 	}
 
-	public Optional<TaskResponseDto> getTaskById(Long id) {
+	public TaskResponseDto getTaskById(Long id) {
 		return taskRepository.findById(id)
-				.map(this::toResponseDto);
+				.map(this::toResponseDto)
+				.orElseThrow(() -> new ResourceNotFoundException("Task not found with id " + id));
 	}
 
 	public PagedResponseDto<TaskResponseDto> getFilteredTasks(TaskStatus status, TaskPriority priority,

@@ -43,17 +43,13 @@ public class TaskManagerController {
 
 	@PostMapping("/tasks")
 	public ResponseEntity<String> createTask(@Valid @RequestBody TaskRequestDto request) {
-		try {
-			Task created = taskService.createTask(request);
-			return ResponseEntity.status(HttpStatus.CREATED)
-					.body("Task created with id " + created.getId());
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().body(e.getMessage());
-		}
+		Task created = taskService.createTask(request);
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body("Task created with id " + created.getId());
 	}
 
 	@GetMapping("/tasks")
-	public ResponseEntity<Object> getTasks(
+	public ResponseEntity<PagedResponseDto<TaskResponseDto>> getTasks(
 			@RequestParam(required = false) TaskStatus status,
 			@RequestParam(required = false) TaskPriority priority,
 			@RequestParam(required = false) LocalDate dueBefore,
@@ -63,38 +59,25 @@ public class TaskManagerController {
 			@RequestParam(defaultValue = "asc") String sortDir,
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "4") int size) {
-		try {
-			return ResponseEntity.ok(taskService.getFilteredTasks(
-					status, priority, dueBefore, dueAfter, projectId, sortBy, sortDir, page, size));
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().body(e.getMessage());
-		}
+		return ResponseEntity.ok(taskService.getFilteredTasks(
+				status, priority, dueBefore, dueAfter, projectId, sortBy, sortDir, page, size));
 	}
 
 	@GetMapping("/tasks/{id}")
 	public ResponseEntity<TaskResponseDto> getTask(@PathVariable Long id) {
-		return taskService.getTaskById(id)
-				.map(ResponseEntity::ok)
-				.orElseGet(() -> ResponseEntity.notFound().build());
+		return ResponseEntity.ok(taskService.getTaskById(id));
 	}
 
 	@PutMapping("/tasks/{id}")
 	public ResponseEntity<String> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequestDto request) {
-		try {
-			return taskService.updateTask(id, request)
-					.map(task -> ResponseEntity.ok("Task updated with id " + task.getId()))
-					.orElseGet(() -> ResponseEntity.notFound().build());
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().body(e.getMessage());
-		}
+		Task updated = taskService.updateTask(id, request);
+		return ResponseEntity.ok("Task updated with id " + updated.getId());
 	}
 
 	@DeleteMapping("/tasks/{id}")
 	public ResponseEntity<String> deleteTask(@PathVariable Long id) {
-		if (taskService.deleteTask(id)) {
-			return ResponseEntity.ok("Task deleted with id " + id);
-		}
-		return ResponseEntity.notFound().build();
+		taskService.deleteTask(id);
+		return ResponseEntity.ok("Task deleted with id " + id);
 	}
 
 	@PostMapping("/projects")
