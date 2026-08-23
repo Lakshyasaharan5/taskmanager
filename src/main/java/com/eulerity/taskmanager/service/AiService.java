@@ -2,7 +2,12 @@ package com.eulerity.taskmanager.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HexFormat;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,6 +42,8 @@ public class AiService {
 	private final long timeoutSeconds;
 	private final String suggestionModel;
 	private final String safetyModel;
+	private final CacheService cacheService;
+	private final long cacheTtlMinutes;
 
 	public AiService(ChatClient.Builder chatClientBuilder,
 			@Value("classpath:prompts/task-suggestion-prompt.xml") Resource suggestionPromptResource,
@@ -44,7 +51,9 @@ public class AiService {
 			ObjectMapper objectMapper, Validator validator,
 			@Value("${ai.task-suggestion.timeout-seconds}") long timeoutSeconds,
 			@Value("${ai.task-suggestion.model}") String suggestionModel,
-			@Value("${ai.safety-check.model}") String safetyModel) throws IOException {
+			@Value("${ai.safety-check.model}") String safetyModel,
+			CacheService cacheService,
+			@Value("${ai.task-suggestion.cache-ttl-minutes}") long cacheTtlMinutes) throws IOException {
 		this.chatClient = chatClientBuilder.build();
 		this.suggestionPromptTemplate = StreamUtils.copyToString(suggestionPromptResource.getInputStream(),
 				StandardCharsets.UTF_8);
@@ -55,10 +64,19 @@ public class AiService {
 		this.timeoutSeconds = timeoutSeconds;
 		this.suggestionModel = suggestionModel;
 		this.safetyModel = safetyModel;
+		this.cacheService = cacheService;
+		this.cacheTtlMinutes = cacheTtlMinutes;
 	}
 
 	public TaskRequestDto suggestTask(String rawQuery) {
 		String sanitizedQuery = sanitize(rawQuery);
+		String cacheKey = sha256Hex(sanitizedQuery);
+
+		Optional<String> cachedResponse = cacheService.get(cacheKey);
+		if (cachedResponse.isPresent()) {
+			return parseAndValidate(cachedResponse.get());
+		}
+
 		checkSafety(sanitizedQuery);
 
 		String prompt = buildSuggestionPrompt(sanitizedQuery);
@@ -66,7 +84,9 @@ public class AiService {
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 			try {
 				String response = callWithTimeout(prompt, suggestionModel);
-				return parseAndValidate(response);
+				TaskRequestDto suggestion = parseAndValidate(response);
+				cacheService.put(cacheKey, response, Duration.ofMinutes(cacheTtlMinutes));
+				return suggestion;
 			} catch (AiSuggestionException e) {
 				lastFailure = e;
 			}
@@ -94,6 +114,16 @@ public class AiService {
 	private String sanitize(String rawQuery) {
 		String withoutControlChars = rawQuery.replaceAll("\\p{Cntrl}", " ");
 		return withoutControlChars.trim().replaceAll("\\s+", " ");
+	}
+
+	private String sha256Hex(String input) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+			return HexFormat.of().formatHex(hash);
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("SHA-256 algorithm not available", e);
+		}
 	}
 
 	private String buildSuggestionPrompt(String sanitizedQuery) {
