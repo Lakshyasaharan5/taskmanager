@@ -20,12 +20,14 @@ import com.eulerity.taskmanager.dto.request.TaskRequestDto;
 import com.eulerity.taskmanager.dto.request.TaskSuggestionRequestDto;
 import com.eulerity.taskmanager.dto.response.PagedResponseDto;
 import com.eulerity.taskmanager.dto.response.ProjectResponseDto;
+import com.eulerity.taskmanager.dto.response.TaskAuditLogDto;
 import com.eulerity.taskmanager.dto.response.TaskResponseDto;
 import com.eulerity.taskmanager.entity.Project;
 import com.eulerity.taskmanager.entity.Task;
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
 import com.eulerity.taskmanager.entity.enums.TaskStatus;
 import com.eulerity.taskmanager.service.AiService;
+import com.eulerity.taskmanager.service.AuditService;
 import com.eulerity.taskmanager.service.ProjectService;
 import com.eulerity.taskmanager.service.TaskService;
 
@@ -38,11 +40,14 @@ public class TaskManagerController {
 	private final TaskService taskService;
 	private final ProjectService projectService;
 	private final AiService aiService;
+	private final AuditService auditService;
 
-	public TaskManagerController(TaskService taskService, ProjectService projectService, AiService aiService) {
+	public TaskManagerController(TaskService taskService, ProjectService projectService, AiService aiService,
+			AuditService auditService) {
 		this.taskService = taskService;
 		this.projectService = projectService;
 		this.aiService = aiService;
+		this.auditService = auditService;
 	}
 
 	@PostMapping("/tasks")
@@ -82,6 +87,11 @@ public class TaskManagerController {
 	public ResponseEntity<String> deleteTask(@PathVariable Long id) {
 		taskService.deleteTask(id);
 		return ResponseEntity.ok("Task deleted with id " + id);
+	}
+
+	@GetMapping("/tasks/{id}/history")
+	public ResponseEntity<List<TaskAuditLogDto>> getTaskHistory(@PathVariable Long id) {
+		return ResponseEntity.ok(auditService.getHistory(id));
 	}
 
 	@PostMapping("/tasks/suggest")
