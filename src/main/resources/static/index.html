@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Task Manager</title>
+<style>
+	* { box-sizing: border-box; }
+	body {
+		font-family: -apple-system, Segoe UI, Arial, sans-serif;
+		background: #f4f5f7;
+		color: #222;
+		margin: 0;
+		padding: 24px;
+	}
+	h1 {
+		font-size: 22px;
+		margin: 0 0 20px;
+	}
+	h2 {
+		font-size: 16px;
+		margin: 0 0 12px;
+	}
+	.section {
+		background: #fff;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		padding: 16px;
+		margin-bottom: 20px;
+		max-width: 900px;
+	}
+	label {
+		display: block;
+		font-size: 12px;
+		font-weight: 600;
+		margin-top: 10px;
+		margin-bottom: 4px;
+	}
+	input[type=text], input[type=number], textarea, select {
+		width: 100%;
+		padding: 6px 8px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		font-size: 13px;
+		font-family: inherit;
+	}
+	textarea { min-height: 60px; resize: vertical; }
+	button {
+		background: #2563eb;
+		color: #fff;
+		border: none;
+		border-radius: 4px;
+		padding: 7px 14px;
+		font-size: 13px;
+		cursor: pointer;
+		margin-top: 10px;
+		margin-right: 6px;
+	}
+	button:hover { background: #1d4ed8; }
+	button:disabled {
+		background: #b6c3da;
+		cursor: not-allowed;
+	}
+	button.danger { background: #dc2626; }
+	button.danger:hover { background: #b91c1c; }
+	button.secondary { background: #6b7280; }
+	button.secondary:hover { background: #4b5563; }
+	.error-box {
+		color: #b91c1c;
+		background: #fef2f2;
+		border: 1px solid #fecaca;
+		border-radius: 4px;
+		padding: 8px 10px;
+		font-size: 12px;
+		margin-top: 10px;
+		white-space: pre-wrap;
+	}
+	.error-box:empty { display: none; }
+	.list-box {
+		max-height: 360px;
+		overflow-y: auto;
+		border: 1px solid #eee;
+		border-radius: 4px;
+		padding: 8px;
+		margin-top: 10px;
+	}
+	.card {
+		border: 1px solid #e5e7eb;
+		border-radius: 4px;
+		padding: 10px;
+		margin-bottom: 8px;
+		font-size: 13px;
+	}
+	.card:last-child { margin-bottom: 0; }
+	.card .title {
+		font-weight: 600;
+		margin-bottom: 4px;
+	}
+	.card .meta {
+		color: #555;
+		font-size: 12px;
+		margin-bottom: 4px;
+	}
+	.card .desc {
+		color: #333;
+		margin-bottom: 6px;
+	}
+	.status-badge {
+		display: inline-block;
+		padding: 1px 8px;
+		border-radius: 10px;
+		font-size: 11px;
+		font-weight: 600;
+		color: #fff;
+	}
+	.status-todo { background: #2563eb; }
+	.status-in_progress { background: #d97706; }
+	.status-done { background: #16a34a; }
+	.filters {
+		display: flex;
+		gap: 10px;
+		flex-wrap: wrap;
+		align-items: flex-end;
+	}
+	.filters > div { flex: 1; min-width: 120px; }
+	.pagination {
+		margin-top: 10px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 12px;
+	}
+	.empty {
+		color: #888;
+		font-size: 12px;
+		padding: 6px 0;
+	}
+	.change-row {
+		font-size: 12px;
+		padding: 2px 0;
+	}
+	.two-col {
+		display: flex;
+		gap: 20px;
+		flex-wrap: wrap;
+	}
+	.two-col > .section { flex: 1; min-width: 380px; }
+</style>
+</head>
+<body>
+
+<h1>Eulerity Task Manager</h1>
+
+<div class="section" id="ai-section">
+	<h2>AI Task Suggestion</h2>
+	<label for="ai-query">Describe the task</label>
+	<textarea id="ai-query" placeholder="e.g. remind me to submit the quarterly report by next friday"></textarea>
+	<button onclick="requestAiSuggestion()">Get AI Suggestion</button>
+	<div class="error-box" id="ai-error"></div>
+</div>
+
+<div class="two-col">
+	<div class="section" id="create-task-section">
+		<h2>Create Task</h2>
+		<label for="ct-title">Title</label>
+		<input type="text" id="ct-title">
+		<label for="ct-description">Description</label>
+		<textarea id="ct-description"></textarea>
+		<label for="ct-dueDate">Due Date</label>
+		<input type="text" id="ct-dueDate" placeholder="YYYY-MM-DD">
+		<label for="ct-priority">Priority</label>
+		<select id="ct-priority">
+			<option value="LOW">LOW</option>
+			<option value="MEDIUM">MEDIUM</option>
+			<option value="HIGH">HIGH</option>
+		</select>
+		<label for="ct-projectId">Project</label>
+		<select id="ct-projectId">
+			<option value="">None</option>
+		</select>
+		<button onclick="createTask()">Create Task</button>
+		<div class="error-box" id="create-task-error"></div>
+	</div>
+
+	<div class="section" id="create-project-section">
+		<h2>Create Project</h2>
+		<label for="cp-name">Name</label>
+		<input type="text" id="cp-name">
+		<label for="cp-description">Description</label>
+		<textarea id="cp-description"></textarea>
+		<button onclick="createProject()">Create Project</button>
+		<div class="error-box" id="create-project-error"></div>
+	</div>
+</div>
+
+<div class="section" id="project-list-section">
+	<h2>Projects</h2>
+	<button onclick="fetchProjects()">Get Projects</button>
+	<div class="error-box" id="project-list-error"></div>
+	<div class="list-box" id="project-list"><div class="empty">No projects loaded yet.</div></div>
+</div>
+
+<div class="section" id="task-list-section">
+	<h2>Tasks</h2>
+	<div class="filters">
+		<div>
+			<label for="filter-status">Status</label>
+			<select id="filter-status">
+				<option value="">Any</option>
+				<option value="TODO">TODO</option>
+				<option value="IN_PROGRESS">IN_PROGRESS</option>
+				<option value="DONE">DONE</option>
+			</select>
+		</div>
+		<div>
+			<label for="filter-priority">Priority</label>
+			<select id="filter-priority">
+				<option value="">Any</option>
+				<option value="LOW">LOW</option>
+				<option value="MEDIUM">MEDIUM</option>
+				<option value="HIGH">HIGH</option>
+			</select>
+		</div>
+		<div>
+			<button onclick="applyTaskFilters()">Filter</button>
+		</div>
+	</div>
+	<div class="error-box" id="task-list-error"></div>
+	<div class="list-box" id="task-list"><div class="empty">No tasks loaded yet. Click Filter to load.</div></div>
+	<div class="pagination">
+		<button id="prev-page-btn" onclick="goToPage(currentPage - 1)">Prev</button>
+		<span id="page-info">Page 0 of 0 (0 total tasks)</span>
+		<button id="next-page-btn" onclick="goToPage(currentPage + 1)">Next</button>
+	</div>
+</div>
+
+<div class="section" id="update-task-section">
+	<h2>Update Task</h2>
+	<div class="empty" id="update-task-hint">Click Update on a task below to load it here.</div>
+	<div id="update-task-form" style="display:none;">
+		<label>Task ID</label>
+		<div id="update-task-id" style="font-size:13px; font-weight:600;"></div>
+		<label for="ut-title">Title</label>
+		<input type="text" id="ut-title">
+		<label for="ut-description">Description</label>
+		<textarea id="ut-description"></textarea>
+		<label for="ut-dueDate">Due Date</label>
+		<input type="text" id="ut-dueDate" placeholder="YYYY-MM-DD">
+		<label for="ut-priority">Priority</label>
+		<select id="ut-priority">
+			<option value="LOW">LOW</option>
+			<option value="MEDIUM">MEDIUM</option>
+			<option value="HIGH">HIGH</option>
+		</select>
+		<label for="ut-status">Status</label>
+		<select id="ut-status">
+			<option value="TODO">TODO</option>
+			<option value="IN_PROGRESS">IN_PROGRESS</option>
+			<option value="DONE">DONE</option>
+		</select>
+		<label for="ut-projectId">Project</label>
+		<select id="ut-projectId">
+			<option value="">None</option>
+		</select>
+		<button onclick="submitTaskUpdate()">Update Task</button>
+		<button class="secondary" onclick="cancelTaskUpdate()">Cancel</button>
+		<div class="error-box" id="update-task-error"></div>
+	</div>
+</div>
+
+<div class="section" id="audit-section">
+	<h2>Task Audit Trail</h2>
+	<label for="audit-task-id">Task ID</label>
+	<input type="text" id="audit-task-id" placeholder="e.g. 1">
+	<button onclick="fetchAuditTrail()">Get History</button>
+	<div class="error-box" id="audit-error"></div>
+	<div class="list-box" id="audit-list"><div class="empty">No history loaded yet.</div></div>
+</div>
+
+<script>
+	const PAGE_SIZE = 4;
+	let currentPage = 0;
+	let totalPages = 0;
+	let updatingTaskId = null;
+
+	async function apiCall(method, path, body) {
+		const options = { method: method, headers: {} };
+		if (body !== undefined) {
+			options.headers['Content-Type'] = 'application/json';
+			options.body = JSON.stringify(body);
+		}
+		const response = await fetch(path, options);
+		const text = await response.text();
+		let data = text;
+		if (text) {
+			try {
+				data = JSON.parse(text);
+			} catch (e) {
+				data = text;
+			}
+		}
+		return { ok: response.ok, status: response.status, data: data };
+	}
+
+	function errorMessage(result) {
+		const data = result.data;
+		if (data && typeof data === 'object' && data.message) {
+			let message = data.message;
+			if (Array.isArray(data.fields) && data.fields.length > 0) {
+				const fieldText = data.fields.map(function (f) { return f.field + ': ' + f.message; }).join(', ');
+				message += ' (' + fieldText + ')';
+			}
+			return message;
+		}
+		if (typeof data === 'string' && data) {
+			return data;
+		}
+		return 'Request failed with status ' + result.status;
+	}
+
+	function setError(elementId, message) {
+		document.getElementById(elementId).textContent = message || '';
+	}
+
+	function escapeHtml(value) {
+		if (value === null || value === undefined) return '';
+		return String(value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+
+	function statusBadge(status) {
+		if (!status) return '';
+		const cls = 'status-' + status.toLowerCase();
+		return '<span class="status-badge ' + cls + '">' + escapeHtml(status) + '</span>';
+	}
+
+	// ---------- AI suggestion ----------
+	async function requestAiSuggestion() {
+		setError('ai-error', '');
+		const query = document.getElementById('ai-query').value;
+		const result = await apiCall('POST', '/api/tasks/suggest', { query: query });
+		if (!result.ok) {
+			setError('ai-error', errorMessage(result));
+			return;
+		}
+		const suggestion = result.data;
+		document.getElementById('ct-title').value = suggestion.title || '';
+		document.getElementById('ct-description').value = suggestion.description || '';
+		document.getElementById('ct-dueDate').value = suggestion.dueDate || '';
+		if (suggestion.priority) {
+			document.getElementById('ct-priority').value = suggestion.priority;
+		}
+	}
+
+	// ---------- Task create ----------
+	async function createTask() {
+		setError('create-task-error', '');
+		const projectId = document.getElementById('ct-projectId').value;
+		const body = {
+			title: document.getElementById('ct-title').value,
+			description: document.getElementById('ct-description').value || null,
+			dueDate: document.getElementById('ct-dueDate').value,
+			priority: document.getElementById('ct-priority').value,
+			projectId: projectId ? Number(projectId) : null
+		};
+		const result = await apiCall('POST', '/api/tasks', body);
+		if (!result.ok) {
+			setError('create-task-error', errorMessage(result));
+			return;
+		}
+		document.getElementById('ct-title').value = '';
+		document.getElementById('ct-description').value = '';
+		document.getElementById('ct-dueDate').value = '';
+		document.getElementById('ct-priority').value = 'LOW';
+		document.getElementById('ct-projectId').value = '';
+		fetchTasks();
+	}
+
+	// ---------- Project create / list / delete ----------
+	async function createProject() {
+		setError('create-project-error', '');
+		const body = {
+			name: document.getElementById('cp-name').value,
+			description: document.getElementById('cp-description').value || null
+		};
+		const result = await apiCall('POST', '/api/projects', body);
+		if (!result.ok) {
+			setError('create-project-error', errorMessage(result));
+			return;
+		}
+		document.getElementById('cp-name').value = '';
+		document.getElementById('cp-description').value = '';
+		fetchProjects();
+	}
+
+	async function fetchProjects() {
+		setError('project-list-error', '');
+		const result = await apiCall('GET', '/api/projects');
+		if (!result.ok) {
+			setError('project-list-error', errorMessage(result));
+			return;
+		}
+		renderProjects(result.data);
+	}
+
+	function renderProjects(projects) {
+		const box = document.getElementById('project-list');
+		if (!projects || projects.length === 0) {
+			box.innerHTML = '<div class="empty">No projects found.</div>';
+		} else {
+			box.innerHTML = projects.map(function (project) {
+				const tasks = project.tasks || [];
+				const tasksHtml = tasks.length === 0
+					? '<div class="change-row">No tasks</div>'
+					: tasks.map(function (task) {
+						return '<div class="change-row">#' + task.id + ' - ' + escapeHtml(task.title)
+							+ ' ' + statusBadge(task.status) + ' ' + escapeHtml(task.priority) + '</div>';
+					}).join('');
+				return '<div class="card">'
+					+ '<div class="title">#' + project.id + ' - ' + escapeHtml(project.name) + '</div>'
+					+ (project.description ? '<div class="desc">' + escapeHtml(project.description) + '</div>' : '')
+					+ '<div class="meta">Tasks:</div>'
+					+ tasksHtml
+					+ '<button class="danger" onclick="deleteProject(' + project.id + ')">Delete</button>'
+					+ '</div>';
+			}).join('');
+		}
+		populateProjectDropdowns(projects || []);
+	}
+
+	function populateProjectDropdowns(projects) {
+		const options = '<option value="">None</option>' + projects.map(function (project) {
+			return '<option value="' + project.id + '">' + escapeHtml(project.name) + '</option>';
+		}).join('');
+		['ct-projectId', 'ut-projectId'].forEach(function (id) {
+			const select = document.getElementById(id);
+			const previousValue = select.value;
+			select.innerHTML = options;
+			if ([...select.options].some(function (o) { return o.value === previousValue; })) {
+				select.value = previousValue;
+			}
+		});
+	}
+
+	async function deleteProject(id) {
+		if (!confirm('Delete project ' + id + '? This cannot be undone.')) {
+			return;
+		}
+		setError('project-list-error', '');
+		const result = await apiCall('DELETE', '/api/projects/' + id);
+		if (!result.ok) {
+			setError('project-list-error', errorMessage(result));
+			return;
+		}
+		fetchProjects();
+	}
+
+	// ---------- Task list / filter / pagination ----------
+	function applyTaskFilters() {
+		currentPage = 0;
+		fetchTasks();
+	}
+
+	function goToPage(page) {
+		if (page < 0 || (totalPages > 0 && page >= totalPages)) {
+			return;
+		}
+		currentPage = page;
+		fetchTasks();
+	}
+
+	async function fetchTasks() {
+		setError('task-list-error', '');
+		const status = document.getElementById('filter-status').value;
+		const priority = document.getElementById('filter-priority').value;
+		const params = new URLSearchParams();
+		if (status) params.set('status', status);
+		if (priority) params.set('priority', priority);
+		params.set('page', currentPage);
+		params.set('size', PAGE_SIZE);
+
+		const result = await apiCall('GET', '/api/tasks?' + params.toString());
+		if (!result.ok) {
+			setError('task-list-error', errorMessage(result));
+			return;
+		}
+		const page = result.data;
+		currentPage = page.page;
+		totalPages = page.totalPages;
+		renderTasks(page.content);
+		updatePaginationControls(page);
+	}
+
+	function renderTasks(tasks) {
+		const box = document.getElementById('task-list');
+		if (!tasks || tasks.length === 0) {
+			box.innerHTML = '<div class="empty">No tasks found.</div>';
+			return;
+		}
+		box.innerHTML = tasks.map(function (task) {
+			const projectLabel = task.project ? escapeHtml(task.project.name) : 'None';
+			return '<div class="card">'
+				+ '<div class="title">#' + task.id + ' - ' + escapeHtml(task.title) + ' ' + statusBadge(task.status) + '</div>'
+				+ (task.description ? '<div class="desc">' + escapeHtml(task.description) + '</div>' : '')
+				+ '<div class="meta">Due: ' + escapeHtml(task.dueDate) + ' | Priority: ' + escapeHtml(task.priority) + ' | Project: ' + projectLabel + '</div>'
+				+ '<button onclick="startTaskUpdate(' + task.id + ')">Update</button>'
+				+ '<button class="danger" onclick="deleteTask(' + task.id + ')">Delete</button>'
+				+ '</div>';
+		}).join('');
+	}
+
+	function updatePaginationControls(page) {
+		document.getElementById('page-info').textContent =
+			'Page ' + page.page + ' of ' + Math.max(page.totalPages, 1) + ' (' + page.totalElements + ' total tasks)';
+		document.getElementById('prev-page-btn').disabled = page.page <= 0;
+		document.getElementById('next-page-btn').disabled = page.page >= page.totalPages - 1;
+	}
+
+	async function deleteTask(id) {
+		if (!confirm('Delete task ' + id + '? This cannot be undone.')) {
+			return;
+		}
+		setError('task-list-error', '');
+		const result = await apiCall('DELETE', '/api/tasks/' + id);
+		if (!result.ok) {
+			setError('task-list-error', errorMessage(result));
+			return;
+		}
+		fetchTasks();
+	}
+
+	// ---------- Task update ----------
+	async function startTaskUpdate(id) {
+		setError('update-task-error', '');
+		const result = await apiCall('GET', '/api/tasks/' + id);
+		if (!result.ok) {
+			setError('update-task-error', errorMessage(result));
+			return;
+		}
+		const task = result.data;
+		updatingTaskId = task.id;
+		document.getElementById('update-task-hint').style.display = 'none';
+		document.getElementById('update-task-form').style.display = 'block';
+		document.getElementById('update-task-id').textContent = '#' + task.id;
+		document.getElementById('ut-title').value = task.title || '';
+		document.getElementById('ut-description').value = task.description || '';
+		document.getElementById('ut-dueDate').value = task.dueDate || '';
+		document.getElementById('ut-priority').value = task.priority || 'LOW';
+		document.getElementById('ut-status').value = task.status || 'TODO';
+		document.getElementById('ut-projectId').value = task.project ? String(task.project.id) : '';
+	}
+
+	function cancelTaskUpdate() {
+		updatingTaskId = null;
+		document.getElementById('update-task-form').style.display = 'none';
+		document.getElementById('update-task-hint').style.display = 'block';
+		setError('update-task-error', '');
+	}
+
+	async function submitTaskUpdate() {
+		if (updatingTaskId === null) {
+			return;
+		}
+		setError('update-task-error', '');
+		const projectId = document.getElementById('ut-projectId').value;
+		const body = {
+			title: document.getElementById('ut-title').value,
+			description: document.getElementById('ut-description').value || null,
+			dueDate: document.getElementById('ut-dueDate').value,
+			priority: document.getElementById('ut-priority').value,
+			status: document.getElementById('ut-status').value,
+			projectId: projectId ? Number(projectId) : null
+		};
+		const result = await apiCall('PUT', '/api/tasks/' + updatingTaskId, body);
+		if (!result.ok) {
+			setError('update-task-error', errorMessage(result));
+			return;
+		}
+		cancelTaskUpdate();
+		fetchTasks();
+	}
+
+	// ---------- Audit trail ----------
+	async function fetchAuditTrail() {
+		setError('audit-error', '');
+		const id = document.getElementById('audit-task-id').value;
+		if (!id) {
+			setError('audit-error', 'Enter a task ID first.');
+			return;
+		}
+		const result = await apiCall('GET', '/api/tasks/' + id + '/history');
+		if (!result.ok) {
+			setError('audit-error', errorMessage(result));
+			return;
+		}
+		renderAuditTrail(result.data);
+	}
+
+	function renderAuditTrail(entries) {
+		const box = document.getElementById('audit-list');
+		if (!entries || entries.length === 0) {
+			box.innerHTML = '<div class="empty">No history found for this task.</div>';
+			return;
+		}
+		box.innerHTML = entries.map(function (entry) {
+			let changesHtml;
+			if (entry.changes && entry.changes.length > 0) {
+				changesHtml = entry.changes.map(function (c) {
+					return '<div class="change-row">' + escapeHtml(c.fieldName) + ': '
+						+ escapeHtml(c.oldValue) + ' &rarr; ' + escapeHtml(c.newValue) + '</div>';
+				}).join('');
+			} else {
+				changesHtml = '<div class="change-row">No field changes</div>';
+			}
+			return '<div class="card">'
+				+ '<div class="title">' + escapeHtml(entry.action) + '</div>'
+				+ '<div class="meta">' + escapeHtml(entry.changedAt) + '</div>'
+				+ changesHtml
+				+ '</div>';
+		}).join('');
+	}
+
+	document.addEventListener('DOMContentLoaded', fetchProjects);
+</script>
+
+</body>
+</html>
