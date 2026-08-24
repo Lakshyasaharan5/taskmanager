@@ -1,5 +1,4 @@
 # Eulerity TaskManager
---
 
 ### Setup and Run
    - Prerequisites: Java 17, Maven wrapper included
