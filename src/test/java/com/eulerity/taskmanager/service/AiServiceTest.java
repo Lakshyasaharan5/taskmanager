@@ -90,6 +90,23 @@ class AiServiceTest {
 	}
 
 	@Test
+	void suggestTask_missingDueDate_appliesDefaultDueDate() {
+		ChatClient.CallResponseSpec safetyResponse = mock(ChatClient.CallResponseSpec.class);
+		when(safetyResponse.content()).thenReturn("{\"safe\": true, \"reason\": null}");
+
+		ChatClient.CallResponseSpec suggestionResponse = mock(ChatClient.CallResponseSpec.class);
+		when(suggestionResponse.content()).thenReturn(
+				"{\"title\":\"Buy milk\",\"description\":null,\"dueDate\":null,\"priority\":\"LOW\"}");
+
+		when(requestSpec.call()).thenReturn(safetyResponse, suggestionResponse);
+
+		TaskRequestDto result = aiService.suggestTask("remind me to buy milk");
+
+		assertThat(result.getTitle()).isEqualTo("Buy milk");
+		assertThat(result.getDueDate()).isEqualTo(LocalDate.now().plusDays(7));
+	}
+
+	@Test
 	void suggestTask_malformedSuggestionResponse_throwsAfterRetries() {
 		ChatClient.CallResponseSpec safetyResponse = mock(ChatClient.CallResponseSpec.class);
 		when(safetyResponse.content()).thenReturn("{\"safe\": true, \"reason\": null}");

@@ -176,6 +176,10 @@ public class AiService {
 			throw new AiSuggestionException("AI returned a response that could not be parsed into a task");
 		}
 
+		if (suggestion.getDueDate() == null) {
+			suggestion.setDueDate(LocalDate.now().plusDays(7));
+		}
+
 		Set<ConstraintViolation<TaskRequestDto>> violations = validator.validate(suggestion);
 		if (!violations.isEmpty()) {
 			String reasons = violations.stream()
