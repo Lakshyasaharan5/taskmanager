@@ -14,6 +14,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +34,8 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AiService {
+
+	private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
 	private static final int MAX_ATTEMPTS = 3;
 
@@ -159,6 +163,7 @@ public class AiService {
 			Thread.currentThread().interrupt();
 			throw new AiSuggestionException("AI suggestion call was interrupted");
 		} catch (ExecutionException e) {
+			log.error("Upstream AI call failed", e.getCause());
 			throw new AiSuggestionException("AI service is currently unavailable");
 		}
 	}
