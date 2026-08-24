@@ -23,6 +23,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.eulerity.taskmanager.dto.request.TaskRequestDto;
 import com.eulerity.taskmanager.entity.enums.TaskPriority;
+import com.eulerity.taskmanager.entity.enums.TaskStatus;
 import com.eulerity.taskmanager.exception.AiSuggestionException;
 
 import jakarta.validation.Validation;
@@ -85,6 +86,7 @@ class AiServiceTest {
 		assertThat(result.getDescription()).isEqualTo("Finance report");
 		assertThat(result.getDueDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getPriority()).isEqualTo(TaskPriority.HIGH);
+		assertThat(result.getStatus()).isEqualTo(TaskStatus.TODO);
 	}
 
 	@Test

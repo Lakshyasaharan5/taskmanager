@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
 import com.eulerity.taskmanager.dto.request.TaskRequestDto;
+import com.eulerity.taskmanager.entity.enums.TaskStatus;
 import com.eulerity.taskmanager.exception.AiSuggestionException;
 
 import jakarta.validation.ConstraintViolation;
@@ -179,6 +180,7 @@ public class AiService {
 			throw new AiSuggestionException("AI suggestion failed validation: " + reasons);
 		}
 
+		suggestion.setStatus(TaskStatus.TODO);
 		return suggestion;
 	}
 
