@@ -159,7 +159,7 @@ public class AiService {
 			Thread.currentThread().interrupt();
 			throw new AiSuggestionException("AI suggestion call was interrupted");
 		} catch (ExecutionException e) {
-			throw new AiSuggestionException("AI suggestion call failed: " + e.getCause().getMessage());
+			throw new AiSuggestionException("AI service is currently unavailable");
 		}
 	}
 
