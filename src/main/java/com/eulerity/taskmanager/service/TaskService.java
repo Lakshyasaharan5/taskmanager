@@ -96,8 +96,8 @@ public class TaskService {
 		if (!taskRepository.existsById(id)) {
 			throw new ResourceNotFoundException("Task not found with id " + id);
 		}
-		auditService.logDelete(id);
 		taskRepository.deleteById(id);
+		auditService.logDelete(id);
 	}
 
 	private void addIfChanged(List<FieldChange> changes, String fieldName, Object oldValue, Object newValue) {
